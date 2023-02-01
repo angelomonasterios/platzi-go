@@ -11,47 +11,44 @@ import (
 type Client chan<- string
 
 var (
-	incomingCLients = make(chan Client)
-	levingClients   = make(chan Client)
+	incomingClients = make(chan Client)
+	leavingClients  = make(chan Client)
 	messages        = make(chan string)
 )
 
 var (
-	hostName   = flag.String("h", "localhost", "hostname")
-	portNumber = flag.Int("p", 3090, "port")
+	host = flag.String("h", "localhost", "host")
+	port = flag.Int("p", 3090, "port")
 )
+
+// Client1 -> Server -> HandleConnection(Client1)
 
 func HandleConnection(conn net.Conn) {
 	defer conn.Close()
 	message := make(chan string)
-	go messageWrite(conn, message)
+	go MessageWrite(conn, message)
 	clientName := conn.RemoteAddr().String()
 
-	message <- fmt.Sprintf("welcome to the server, your name %s\n", clientName)
-
+	message <- fmt.Sprintf("Welcome to the server, your name %s\n", clientName)
 	messages <- fmt.Sprintf("New client is here, name %s\n", clientName)
-
-	incomingCLients <- message
+	incomingClients <- message
 
 	inputMessage := bufio.NewScanner(conn)
 	for inputMessage.Scan() {
-		message <- fmt.Sprintf("%s: %s\n", clientName, inputMessage.Text())
+		messages <- fmt.Sprintf("%s: %s\n", clientName, inputMessage.Text())
 	}
 
-	levingClients <- message
-
-	messages <- fmt.Sprintf("%s said goodbye\n", clientName)
-
+	leavingClients <- message
+	messages <- fmt.Sprintf("%s said goodbye!", clientName)
 }
 
-func messageWrite(conn net.Conn, messages <-chan string) {
-	for message := range messages {
-		fmt.Fprintln(conn, message)
-
+func MessageWrite(conn net.Conn, messages <-chan string) {
+	for messsage := range messages {
+		fmt.Fprintln(conn, messsage)
 	}
 }
 
-func BroadCast() {
+func Broadcast() {
 	clients := make(map[Client]bool)
 	for {
 		select {
@@ -59,33 +56,27 @@ func BroadCast() {
 			for client := range clients {
 				client <- message
 			}
-		case newClient := <-incomingCLients:
+		case newClient := <-incomingClients:
 			clients[newClient] = true
-		case levingClient := <-levingClients:
-			delete(clients, levingClient)
-			close(levingClient)
+		case leavingClient := <-leavingClients:
+			delete(clients, leavingClient)
+			close(leavingClient)
 		}
 	}
 }
 
 func main() {
-	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", *hostName, *portNumber))
+	listener, err := net.Listen("tcp", fmt.Sprintf("%s:%d", *host, *port))
 	if err != nil {
 		log.Fatal(err)
 	}
-
-	go BroadCast()
-
+	go Broadcast()
 	for {
 		conn, err := listener.Accept()
-
 		if err != nil {
 			log.Print(err)
 			continue
 		}
-
 		go HandleConnection(conn)
-
 	}
-
 }

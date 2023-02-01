@@ -17,17 +17,14 @@ var (
 func main() {
 	flag.Parse()
 	conn, err := net.Dial("tcp", fmt.Sprintf("%s:%d", *host, *port))
-
 	if err != nil {
 		log.Fatal(err)
 	}
-
 	done := make(chan struct{})
 	go func() {
 		io.Copy(os.Stdout, conn)
 		done <- struct{}{}
 	}()
-
 	CopyContent(conn, os.Stdin)
 	conn.Close()
 	<-done
@@ -38,5 +35,4 @@ func CopyContent(dst io.Writer, src io.Reader) {
 	if err != nil {
 		log.Fatal(err)
 	}
-
 }
