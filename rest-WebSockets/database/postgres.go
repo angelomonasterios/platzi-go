@@ -69,7 +69,7 @@ func (repo *PostgresRepository) GetUserByEmail(ctx context.Context, email string
 	}()
 	var user = models.User{}
 	for rows.Next() {
-		if err = rows.Scan(&user.Id, &user.Email); err != nil {
+		if err = rows.Scan(&user.Id, &user.Email, &user.Password); err != nil {
 			return &user, nil
 		}
 	}
@@ -79,4 +79,9 @@ func (repo *PostgresRepository) GetUserByEmail(ctx context.Context, email string
 	}
 
 	return &user, nil
+}
+
+func (repo *PostgresRepository) InsertPost(ctx context.Context, post *models.Post) error {
+	_, err := repo.db.ExecContext(ctx, "INSERT INTO posts (id, post_content, user_id) VALUES ($1,$2,$3)", post.Id, post.PostContent, post.UserId)
+	return err
 }
