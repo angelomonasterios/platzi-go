@@ -8,11 +8,13 @@ CREATE TABLE users
     created_at TIMESTAMP    NOT NULL DEFAULT NOW()
 );
 
-DROP TABLE IF EXISTS posts
+DROP TABLE IF EXISTS posts;
 
-create table posts (
-    id VARCHAR(32) PRIMARY KEY,
+CREATE TABLE posts
+(
+    id           VARCHAR(32) PRIMARY KEY,
     post_content VARCHAR(255) NOT NULL,
-    created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-    user_id VARCHAR(32) NOT NULL,
-    FOREIGN KEY (user_id) REFERENCES users(id)
+    created_at   TIMESTAMP    NOT NULL DEFAULT NOW(),
+    user_id      VARCHAR(32)  NOT NULL,
+    FOREIGN KEY (user_id) REFERENCES users (id)
+);
