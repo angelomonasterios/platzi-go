@@ -1,0 +1,46 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+    <h1>Post aplication Tester</h1>
+
+    <script>
+        var information = []
+        fetch("http://localhost:5050/posts?page=1",{
+            method: "GET",
+            headers:{
+                "Content-Type":"application/json",
+            }
+        }).then((response) => {
+                return response.json()
+        }).then((json)=> {
+            for (const jsonKey in json) {
+                var nodeP = document.createElement("p")
+                nodeP.innerText =  JSON.stringify(json[jsonKey], undefined, 2);
+                document.body.append(nodeP)
+
+            }
+        })
+
+        var ws = new WebSocket("ws://localhost:5050/ws");
+        ws.onopen = function (event) {
+            console.log("Conntected to websocket")
+        }
+
+        ws.onmessage = function (event) {
+            console.log(event.data)
+            var nodeP = document.createElement("p")
+            nodeP.innerText =  event.data;
+            document.body.append(nodeP)
+        }
+
+        ws.onerror = function (event) {
+            console.log("Error: " + event.data)
+        }
+
+    </script>
+</body>
+</html>
